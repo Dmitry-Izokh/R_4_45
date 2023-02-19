@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Command">
+		<Assembly>"C:\Program Files\RevitAPITrainig\R_4_45.dll"</Assembly>
+		<AddInId>2DD5C08E-7373-46C4-928C-5CFF0DC47ECB</AddInId>
+		<FullClassName>R_4_45.Main</FullClassName>
+		<VendorId>ADSK</VendorId>
+		<Text>Создание домика</Text>
+	</AddIn>
+</RevitAddIns>
