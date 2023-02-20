@@ -49,7 +49,7 @@ namespace R_4_45
                 AddWindow(doc, level1, walls[2]);
                 AddWindow(doc, level1, walls[3]);
                
-                AddRoof(doc, level2, widthWall, depthWall, hightRoof);
+                AddRoof(doc, level1, level2, widthWall, depthWall, hightRoof, walls);
                 ts.Commit();
             }
             return Result.Succeeded;
@@ -79,8 +79,8 @@ namespace R_4_45
                 .OfClass(typeof(FamilySymbol))
                 .OfCategory(BuiltInCategory.OST_Doors)
                 .OfType<FamilySymbol>()
-                .Where(x => x.Name.Equals("0915 х 2134 мм"))
-                .Where(x => x.FamilyName.Equals("Одиночные-Щитовые"))
+                .Where(x => x.Name.Equals("0762 x 2032 мм"))
+                .Where(x => x.FamilyName.Equals("M_Однопольные-Щитовые"))
                 .FirstOrDefault();
 
             LocationCurve hostCurve = wall.Location as LocationCurve;
@@ -94,6 +94,7 @@ namespace R_4_45
             }
             doc.Create.NewFamilyInstance(point, doorType, wall, level1, StructuralType.NonStructural);
         }
+
         // Метод создания окна
         private void AddWindow(Document doc, Level level1, Wall wall)
         {
@@ -114,10 +115,16 @@ namespace R_4_45
             {
                 windowType.Activate();
             }
-            doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
+            FamilyInstance window = doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
+            //double heihgtW = 800;
+            //double heihgtWindow = UnitUtils.ConvertToInternalUnits(heihgtW, DisplayUnitType.DUT_MILLIMETERS);
+            //window.Set(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM, heihgtWindow);
+
+            //Parameter windowsBottom = window.LookupParameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).Set(heihgtWindow);
         }
+
         // Метод создания кровли
-        private Result AddRoof(Document doc, Level level2, double widthWall, double depthWall, double hightRoof)
+        private Result AddRoof(Document doc, Level level1, Level level2, double widthWall, double depthWall, double hightRoof, List<Wall> walls)
         {
             // Получить тип крыши по умолчанию
             ElementId id = doc.GetDefaultElementTypeId(ElementTypeGroup.RoofType);
@@ -128,21 +135,41 @@ namespace R_4_45
                 return Result.Failed;
             }
             // Cоздать схему
+            double hightLevel1 = level1.GetParameters(BuiltInParameter.LEVEL_ROOM_COMPUTATION_HEIGHT);
             double width = UnitUtils.ConvertToInternalUnits(widthWall, DisplayUnitType.DUT_MILLIMETERS);
             double depth = UnitUtils.ConvertToInternalUnits(depthWall, DisplayUnitType.DUT_MILLIMETERS);
             double hight = UnitUtils.ConvertToInternalUnits(hightRoof, DisplayUnitType.DUT_MILLIMETERS);
+            double roofBottom = UnitUtils.ConvertToInternalUnits(hightLevel1, DisplayUnitType.DUT_MILLIMETERS);
+            double wallwidth = walls[0].Width;
+            double wwidth = UnitUtils.ConvertToInternalUnits(wallwidth, DisplayUnitType.DUT_MILLIMETERS);
+            double ofset = wwidth / 2;
             double dx = width / 2;
-            double dxMidle = width / 2;
+            double dxMidle = 0;
             double dy = width / 2;
-            double dz = hight;
-            List<XYZ> points = new List<XYZ>();
-            points.Add(new XYZ(-dx,      -dy, 0));
-            points.Add(new XYZ( dxMidle, -dy, dz));
-            points.Add(new XYZ( dx,      -dy, 0));
+            double dyOfset = dy + ofset;
+            double dz = hight + roofBottom;
             
+           
+
+           
+            List<XYZ> points = new List<XYZ>();
+            points.Add(new XYZ(-dx,      -dy, roofBottom));
+            points.Add(new XYZ( dxMidle, -dy, dz));
+            points.Add(new XYZ( dx,      -dy, roofBottom));
+
+            points.Add(new XYZ(-dx,       0, roofBottom));
+            points.Add(new XYZ( dx,       0, roofBottom));
+            points.Add(new XYZ( dxMidle,  0, dz));
+
+            List<XYZ> points2 = new List<XYZ>();
+            points.Add(new XYZ(-ofset, -dy, 0));
+            points.Add(new XYZ(dxMidle, -dy, dz));
+            points.Add(new XYZ(ofset, -dy, 0));
+
+
             CurveArray curveArray = new CurveArray();
-            curveArray.Append(Line.CreateBound(points[0], points[1]));
-            curveArray.Append(Line.CreateBound(points[1], points[2]));
+            curveArray.Append(Line.CreateBound(points[0] - points2[0], points[1]));
+            curveArray.Append(Line.CreateBound(points[1], points[2] + points2[2]));
             // Получить высоту текущего вида
             Level roofHost = level2;
             if (roofHost == null)
@@ -150,8 +177,8 @@ namespace R_4_45
                 TaskDialog.Show("Error", "No es PlainView");
                 return Result.Failed;
             }
-            ReferencePlane plane = doc.Create.NewReferencePlane(points[0], points[1], points[2], doc.ActiveView);
-            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, -dy, dy);
+            ReferencePlane plane = doc.Create.NewReferencePlane2(points[3], points[4], points[5], doc.ActiveView);
+            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, -dyOfset, dyOfset);
             return Result.Succeeded;
         }
     }
