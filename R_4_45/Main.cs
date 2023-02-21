@@ -116,11 +116,9 @@ namespace R_4_45
                 windowType.Activate();
             }
             FamilyInstance window = doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
-            //double heihgtW = 800;
-            //double heihgtWindow = UnitUtils.ConvertToInternalUnits(heihgtW, DisplayUnitType.DUT_MILLIMETERS);
-            //window.Set(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM, heihgtWindow);
-
-            //Parameter windowsBottom = window.LookupParameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).Set(heihgtWindow);
+            double heihgtW = 800;
+            double heihgtWindow = UnitUtils.ConvertToInternalUnits(heihgtW, DisplayUnitType.DUT_MILLIMETERS);
+            window.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).Set(heihgtWindow);           
         }
 
         // Метод создания кровли
@@ -135,11 +133,11 @@ namespace R_4_45
                 return Result.Failed;
             }
             // Cоздать схему
-            double hightLevel1 = level1.GetParameters(BuiltInParameter.LEVEL_ROOM_COMPUTATION_HEIGHT);
+            
             double width = UnitUtils.ConvertToInternalUnits(widthWall, DisplayUnitType.DUT_MILLIMETERS);
             double depth = UnitUtils.ConvertToInternalUnits(depthWall, DisplayUnitType.DUT_MILLIMETERS);
             double hight = UnitUtils.ConvertToInternalUnits(hightRoof, DisplayUnitType.DUT_MILLIMETERS);
-            double roofBottom = UnitUtils.ConvertToInternalUnits(hightLevel1, DisplayUnitType.DUT_MILLIMETERS);
+            double roofBottom = level2.Elevation;
             double wallwidth = walls[0].Width;
             double wwidth = UnitUtils.ConvertToInternalUnits(wallwidth, DisplayUnitType.DUT_MILLIMETERS);
             double ofset = wwidth / 2;
@@ -162,9 +160,9 @@ namespace R_4_45
             points.Add(new XYZ( dxMidle,  0, dz));
 
             List<XYZ> points2 = new List<XYZ>();
-            points.Add(new XYZ(-ofset, -dy, 0));
-            points.Add(new XYZ(dxMidle, -dy, dz));
-            points.Add(new XYZ(ofset, -dy, 0));
+            points2.Add(new XYZ(-ofset, -dy, 0));
+            points2.Add(new XYZ(dxMidle, -dy, dz));
+            points2.Add(new XYZ(ofset, -dy, 0));
 
 
             CurveArray curveArray = new CurveArray();
